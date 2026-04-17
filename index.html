@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Maths End-Sem Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0e1018; --surface:#151826; --card:#1c1f33;
+      --border:#272b45; --border2:#333755;
+      --p:#7c6af7; --p2:#a78bfa; --blue:#60d9f9;
+      --green:#34d399; --yellow:#fbbf24;
+      --text:#dde4f0; --sub:#7b87a6; --r:12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+         min-height:100vh;padding:1.5rem 1rem 5rem}
+
+    /* ── Header ── */
+    .hdr{text-align:center;margin-bottom:2rem}
+    .hdr h1{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;letter-spacing:-.5px;
+      background:linear-gradient(120deg,var(--p2),var(--blue));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hdr p{color:var(--sub);font-size:.85rem;margin-top:.35rem}
+
+    /* ── Global progress ── */
+    .gbar-wrap{max-width:820px;margin:0 auto 1.2rem;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);padding:1rem 1.4rem;
+      display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .gbar-wrap .gl{font-weight:600;font-size:.9rem;white-space:nowrap}
+    .track{flex:1;min-width:120px;height:8px;background:var(--border2);
+           border-radius:99px;overflow:hidden}
+    .fill{height:100%;background:linear-gradient(90deg,var(--p),var(--blue));
+          border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+    .gpct{font-family:'Fira Mono',monospace;font-size:.85rem;
+          color:var(--blue);min-width:38px;text-align:right}
+    .gcnt{color:var(--sub);font-size:.8rem;white-space:nowrap}
+
+    /* ── Ctrl buttons ── */
+    .ctrls{max-width:820px;margin:0 auto .8rem;
+           display:flex;justify-content:flex-end;gap:.5rem}
+    .btn{background:var(--surface);border:1px solid var(--border);
+         color:var(--sub);padding:.32rem .8rem;border-radius:8px;
+         font-size:.78rem;font-family:inherit;cursor:pointer;transition:all .18s}
+    .btn:hover{border-color:var(--p);color:var(--p2)}
+    .btn.danger{color:#f87171;border-color:#f8717130}
+
+    /* ── CO Cards ── */
+    .co-list{max-width:820px;margin:0 auto;display:grid;gap:1.2rem}
+
+    .co-card{background:var(--card);border:1px solid var(--border);
+             border-radius:var(--r);overflow:hidden;
+             transition:box-shadow .25s,border-color .25s}
+    .co-card:hover{box-shadow:0 4px 24px #00000040}
+
+    .co1{border-left:3px solid var(--p2)}
+    .co2{border-left:3px solid var(--blue)}
+    .co3{border-left:3px solid var(--green)}
+    .co4{border-left:3px solid var(--yellow)}
+
+    .co-head{padding:.85rem 1.2rem;display:flex;align-items:center;gap:.8rem;
+             cursor:pointer;user-select:none;transition:background .15s}
+    .co-head:hover{background:#1e223a}
+
+    .badge{font-weight:700;font-size:.7rem;padding:.2rem .55rem;
+           border-radius:6px;letter-spacing:.4px;flex-shrink:0}
+    .co1 .badge{background:#2a1a6e;color:#c4b5fd}
+    .co2 .badge{background:#0a2d3f;color:#7dd3fc}
+    .co3 .badge{background:#14301e;color:#6ee7b7}
+    .co4 .badge{background:#2d1f08;color:#fcd34d}
+
+    .co-title{font-weight:600;font-size:.9rem;flex:1}
+
+    .mini-wrap{flex:1;max-width:110px;height:5px;
+               background:var(--border2);border-radius:99px;overflow:hidden}
+    .mini-fill{height:100%;border-radius:99px;transition:width .4s}
+    .co1 .mini-fill{background:var(--p2)}
+    .co2 .mini-fill{background:var(--blue)}
+    .co3 .mini-fill{background:var(--green)}
+    .co4 .mini-fill{background:var(--yellow)}
+
+    .co-pct{font-family:'Fira Mono',monospace;font-size:.72rem;
+            color:var(--sub);min-width:32px;text-align:right}
+    .chev{color:var(--sub);font-size:.7rem;transition:transform .25s;flex-shrink:0}
+    .collapsed .chev{transform:rotate(-90deg)}
+
+    /* ── Body ── */
+    .co-body{padding:0 1.2rem .9rem}
+    .co-body.hidden{display:none}
+
+    /* ── Problem Section ── */
+    .prob-section{margin-top:1rem}
+
+    .prob-title{font-size:.72rem;font-weight:700;text-transform:uppercase;
+                letter-spacing:1.2px;color:var(--sub);
+                padding:.3rem 0;border-bottom:1px solid var(--border);
+                margin-bottom:.45rem}
+
+    /* ── Model rows ── */
+    .model{display:flex;align-items:center;gap:.65rem;
+           padding:.38rem .25rem;border-radius:7px;
+           cursor:pointer;transition:background .12s}
+    .model:hover{background:#1e2238}
+
+    .box{width:16px;height:16px;border:1.5px solid var(--border2);
+         border-radius:4px;flex-shrink:0;
+         display:grid;place-items:center;transition:all .18s}
+    .box::after{content:'✓';font-size:.65rem;color:transparent;transition:color .18s}
+
+    .model.done .box{background:var(--green);border-color:var(--green)}
+    .model.done .box::after{color:#052e1c}
+    .model.done .mlabel{color:var(--sub);text-decoration:line-through;
+                        text-decoration-color:var(--sub)60}
+
+    .mlabel{font-size:.86rem;line-height:1.45}
+
+    /* ── Toast ── */
+    #toast{position:fixed;bottom:1.5rem;right:1.5rem;
+           background:#12201a;border:1px solid var(--green);
+           color:var(--green);padding:.5rem .9rem;border-radius:9px;
+           font-size:.8rem;opacity:0;transform:translateY(6px);
+           transition:all .25s;pointer-events:none;z-index:999}
+    #toast.show{opacity:1;transform:translateY(0)}
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>📐 Maths End-Sem Tracker</h1>
+  <p>Problems &amp; Model Types · Auto-saves to your device</p>
+</div>
+
+<div class="gbar-wrap">
+  <span class="gl">Overall</span>
+  <div class="track"><div class="fill" id="gFill" style="width:0%"></div></div>
+  <span class="gpct" id="gPct">0%</span>
+  <span class="gcnt" id="gCnt">0 / 0</span>
+</div>
+
+<div class="ctrls">
+  <button class="btn" onclick="expandAll()">▼ All</button>
+  <button class="btn" onclick="collapseAll()">▲ All</button>
+  <button class="btn danger" onclick="resetAll()">↺ Reset</button>
+</div>
+
+<div class="co-list" id="root"></div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STORAGE — localStorage, auto per-device (publish-safe)
+// ═══════════════════════════════════════════════════════
+const SK = 'maths_v2_progress'; // simplified storage key
+
+function saveState(key, val) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SK) || '{}');
+    all[key] = val;
+    localStorage.setItem(SK, JSON.stringify(all));
+  } catch(e){}
+}
+function loadState(key) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SK) || '{}');
+    return all[key] === true;
+  } catch(e){ return false; }
+}
+function clearAllState() {
+  try { localStorage.removeItem(SK); } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+const DATA = [
+  { id:'co1', label:'CO 1', title:'Linear Programming',
+    sections:[
+      { name:'LPP Formulation', models:[
+        'Product-mix / Profit maximization',
+        'Diet / Cost minimization',
+        'Blending / Ingredient mix',
+        'Agriculture / Land & labour allocation',
+        'Manufacturing / Machine capacity',
+      ]},
+      { name:'Graphical Method', models:[
+        'Bounded feasible region (Maximize)',
+        'Bounded feasible region (Minimize)',
+        'Unbounded solution',
+        'Infeasible / No feasible solution',
+        'Multiple optimal solutions',
+        'Equality constraint (line-segment feasible region)',
+        'Formulate + Solve (word problem → graph)',
+      ]},
+      { name:'Simplex Method', models:[
+        'Maximization (≤ constraints, standard)',
+        'Minimization (Big-M method)',
+        'Minimization (Two-phase method)',
+        'Degenerate solution handling',
+        'Multiple optimal solutions identification',
+      ]},
+      { name:'Duality', models:[
+        'Write Dual of a given Primal LPP',
+        'Solve Dual and verify strong duality',
+        'Complementary slackness conditions',
+      ]},
+      { name:'Transportation Problem', models:[
+        'IBFS — North West Corner Method',
+        'IBFS — Least Cost (Cell) Method',
+        'IBFS — Row Minima Method',
+        'IBFS — Column Minima Method',
+        'IBFS — Vogel\'s Approximation Method (VAM)',
+        'Optimization — MODI / UV Method',
+        'Unbalanced transportation (dummy row/col)',
+      ]},
+      { name:'Assignment Problem (Hungarian)', models:[
+        'Balanced assignment (square matrix)',
+        'Unbalanced assignment (dummy row/col)',
+        'Maximization assignment (convert to min)',
+      ]},
+    ]
+  },
+  { id:'co2', label:'CO 2', title:'Integer Programming',
+    sections:[
+      { name:'ILP Formulation', models:[
+        'Pure Integer ILP',
+        'Mixed Integer ILP',
+        '0-1 Binary ILP',
+      ]},
+      { name:'Branch & Bound Method', models:[
+        'Minimization (2 variables)',
+        'Maximization (2 variables)',
+        'Multi-level branching (3+ sub-problems)',
+      ]},
+      { name:'Gomory\'s Cutting Plane Method', models:[
+        'One Gomory cut required',
+        'Two Gomory cuts required',
+      ]},
+      { name:'Gradient Descent', models:[
+        'Single variable f(x)',
+        'Two variables f(x, y)',
+      ]},
+      { name:'Conjugate Gradient Method', models:[
+        'Single variable f(x)',
+        'Two variables f(x, y)',
+      ]},
+      { name:'Newton\'s Method', models:[
+        'Single variable f(x)',
+        'Two variables f(x, y) — Hessian matrix',
+      ]},
+    ]
+  },
+  { id:'co3', label:'CO 3', title:'Non-Linear Programming (NLP)',
+    sections:[
+      { name:'KKT (Karush-Kuhn-Tucker) Conditions', models:[
+        '1 inequality constraint (≤)',
+        '2 inequality constraints (≤)',
+        '1 equality constraint (=)',
+        'Mixed — equality + inequality constraint',
+        'Maximization type',
+        'Verify if a point satisfies KKT',
+      ]},
+      { name:'Wolfe\'s Modified Simplex Method', models:[
+        '2 variables, 1 constraint',
+        '2 variables, 2 constraints',
+      ]},
+      { name:'Beale\'s Method', models:[
+        '2 variables, 1 constraint',
+        '2 variables, 2 constraints',
+      ]},
+      { name:'Geometric Programming', models:[
+        'Degree of difficulty = 0 (unconstrained)',
+        'Degree of difficulty = 0 (with constraints)',
+        'Degree of difficulty ≥ 1',
+        'Problems with positive & negative coefficients',
+      ]},
+    ]
+  },
+  { id:'co4', label:'CO 4', title:'Optimization-Based Search Algorithms',
+    sections:[
+      { name:'Genetic Algorithm (GA)', models:[
+        'Maximize f(x) = x²',
+        'Minimize f(x) = (x−3)² (inverted fitness)',
+        'Custom objective function',
+      ]},
+      { name:'Simulated Annealing (SA)', models:[
+        'Minimize f(x) — single variable',
+        'Minimize f(x,y) — two variables',
+        'Travelling Salesman Problem (TSP)',
+        'Job scheduling / sequencing',
+      ]},
+      { name:'Tabu Search', models:[
+        'Travelling Salesman Problem (TSP)',
+        'Binary string / combinatorial problem',
+      ]},
+      { name:'Ant Colony Optimization (ACO)', models:[
+        'Shortest path / TSP',
+      ]},
+      { name:'Particle Swarm Optimization (PSO)', models:[
+        'Single variable — velocity + position update',
+        'Two variables — velocity + position update',
+      ]},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+//  BUILD DOM
+// ═══════════════════════════════════════════════════════
+const root = document.getElementById('root');
+
+DATA.forEach(co => {
+  const card = document.createElement('div');
+  card.className = `co-card ${co.id}`;
+  card.id = `card-${co.id}`;
+
+  const head = document.createElement('div');
+  head.className = 'co-head';
+  head.innerHTML = `
+    <span class="badge">${co.label}</span>
+    <span class="co-title">${co.title}</span>
+    <div class="mini-wrap"><div class="mini-fill" id="mf-${co.id}" style="width:0%"></div></div>
+    <span class="co-pct" id="mp-${co.id}">0%</span>
+    <span class="chev">▼</span>`;
+
+  const body = document.createElement('div');
+  body.className = 'co-body';
+  body.id = `body-${co.id}`;
+
+  co.sections.forEach(sec => {
+    const sec_el = document.createElement('div');
+    sec_el.className = 'prob-section';
+
+    const title = document.createElement('div');
+    title.className = 'prob-title';
+    title.textContent = sec.name;
+    sec_el.appendChild(title);
+
+    sec.models.forEach((model, mi) => {
+      const key = `${co.id}__${sec.name}__${mi}`;
+      const checked = loadState(key);
+
+      const row = document.createElement('div');
+      row.className = `model${checked ? ' done' : ''}`;
+      row.dataset.key = key;
+      row.innerHTML = `<div class="box"></div><span class="mlabel">${model}</span>`;
+      row.addEventListener('click', () => toggleModel(row, key));
+
+      sec_el.appendChild(row);
+    });
+
+    body.appendChild(sec_el);
+  });
+
+  head.addEventListener('click', () => {
+    const collapsed = card.classList.toggle('collapsed');
+    body.classList.toggle('hidden', collapsed);
+  });
+
+  card.appendChild(head);
+  card.appendChild(body);
+  root.appendChild(card);
+});
+
+// ═══════════════════════════════════════════════════════
+//  LOGIC
+// ═══════════════════════════════════════════════════════
+function toggleModel(row, key) {
+  const now = !row.classList.contains('done');
+  row.classList.toggle('done', now);
+  saveState(key, now);
+  updateProgress();
+  if (now) toast('✓ Saved to device locally');
+}
+
+function updateProgress() {
+  const allRows = document.querySelectorAll('.model');
+  let total = allRows.length, done = 0;
+
+  DATA.forEach(co => {
+    const rows = document.querySelectorAll(`#card-${co.id} .model`);
+    let cd = 0;
+    rows.forEach(r => { if (r.classList.contains('done')) cd++; });
+    const pct = rows.length ? Math.round(cd / rows.length * 100) : 0;
+    document.getElementById(`mf-${co.id}`).style.width = pct + '%';
+    document.getElementById(`mp-${co.id}`).textContent = pct + '%';
+    done += cd;
+  });
+
+  const gpct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('gFill').style.width = gpct + '%';
+  document.getElementById('gPct').textContent = gpct + '%';
+  document.getElementById('gCnt').textContent = `${done} / ${total}`;
+}
+
+function expandAll() {
+  document.querySelectorAll('.co-card').forEach(c => {
+    c.classList.remove('collapsed');
+    c.querySelector('.co-body').classList.remove('hidden');
+  });
+}
+function collapseAll() {
+  document.querySelectorAll('.co-card').forEach(c => {
+    c.classList.add('collapsed');
+    c.querySelector('.co-body').classList.add('hidden');
+  });
+}
+function resetAll() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  clearAllState();
+  document.querySelectorAll('.model').forEach(r => r.classList.remove('done'));
+  updateProgress();
+  toast('Reset complete');
+}
+
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+// Init
+updateProgress();
+</script>
+</body>
+</html>
