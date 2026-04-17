@@ -6,14 +6,14 @@
   <meta name="google-site-verification" content="gZyJxsSbU-Zk7wnIlZQJ4Mqt0Q4JGFvbqV0FfXNLMFs" />
   
   <!-- SEO Meta Tags -->
-  <title>Maths End-Sem Progress Tracker | Optimization Models</title>
-  <meta name="description" content="A simple, interactive progress tracker for engineering and mathematics end-semester exams covering LPP, Integer Programming, NLP (KKT), and Metaheuristics."/>
-  <meta name="keywords" content="Mathematics Tracker, Optimization Problem Types, Linear Programming, KKT Conditions, Wolfe's Method, Beale's Method, Metaheuristics Checklist"/>
+  <title>End-Sem Progress Tracker | Maths, ML, Cloud & Edge</title>
+  <meta name="description" content="A simple, interactive progress tracker for engineering end-semester exams covering Mathematics, Machine Learning, Cloud Infrastructure, and AI Edge Computing."/>
+  <meta name="keywords" content="Mathematics Tracker, Machine Learning, Cloud Computing, Edge AI, KKT Conditions, Neural Networks, Docker, Kubernetes, Edge Devices, Quantization"/>
   <meta name="author" content="Rohan Das"/>
   
   <!-- Open Graph / Social -->
-  <meta property="og:title" content="Maths End-Sem Progress Tracker"/>
-  <meta property="og:description" content="Interactive checklist for tracking preparation in optimization mathematical models (CO1-CO4)."/>
+  <meta property="og:title" content="End-Sem Progress Tracker"/>
+  <meta property="og:description" content="Interactive checklist for tracking preparation in Maths, ML, Cloud, and Edge Computing (CO1-CO4)."/>
   <meta property="og:type" content="website"/>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Mono&display=swap" rel="stylesheet"/>
@@ -27,14 +27,24 @@
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
-         min-height:100vh;padding:1.5rem 1rem 5rem}
+         min-height:100vh;padding:1.5rem 1rem 5rem;overflow-y:scroll}
 
     /* ── Header ── */
-    .hdr{text-align:center;margin-bottom:2rem}
+    .hdr{text-align:center;margin-bottom:1.5rem}
     .hdr h1{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;letter-spacing:-.5px;
       background:linear-gradient(120deg,var(--p2),var(--blue));
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .hdr p{color:var(--sub);font-size:.85rem;margin-top:.35rem}
+
+    /* ── Subjects Tabs ── */
+    .tabs{max-width:820px;margin:0 auto 1.5rem;display:flex;background:var(--surface);
+          border:1px solid var(--border);border-radius:10px;padding:.3rem;
+          flex-wrap:wrap;gap:2px}
+    .tab{flex:1;min-width:120px;text-align:center;padding:.6rem;cursor:pointer;border-radius:7px;
+         font-weight:600;font-size:.82rem;color:var(--sub);transition:all .2s;
+         user-select:none;border:1px solid transparent}
+    .tab:hover{color:var(--text)}
+    .tab.active{background:var(--card);color:var(--blue);border:1px solid var(--border)}
 
     /* ── Global progress ── */
     .gbar-wrap{max-width:820px;margin:0 auto 1.2rem;
@@ -83,7 +93,8 @@
     .co3 .badge{background:#14301e;color:#6ee7b7}
     .co4 .badge{background:#2d1f08;color:#fcd34d}
 
-    .co-title{font-weight:600;font-size:.9rem;flex:1}
+    .co-title{font-weight:600;font-size:.9rem;flex:1;display:flex;align-items:center;gap:.5rem}
+    .co-title span{opacity:0.6;font-size:.75rem;font-weight:400}
 
     .mini-wrap{flex:1;max-width:110px;height:5px;
                background:var(--border2);border-radius:99px;overflow:hidden}
@@ -140,12 +151,19 @@
 <body>
 
 <div class="hdr">
-  <h1>📐 Maths End-Sem Tracker</h1>
-  <p>Problems &amp; Model Types · Auto-saves to your device</p>
+  <h1>📚 End-Sem Tracker</h1>
+  <p>Track your syllabus progress locally</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchSubject('maths')" id="tab-maths">📐 Maths</div>
+  <div class="tab" onclick="switchSubject('ml')" id="tab-ml">🤖 Machine Learning</div>
+  <div class="tab" onclick="switchSubject('cis')" id="tab-cis">☁️ Cloud Infra</div>
+  <div class="tab" onclick="switchSubject('edge')" id="tab-edge">📡 Edge AI</div>
 </div>
 
 <div class="gbar-wrap">
-  <span class="gl">Overall</span>
+  <span class="gl" id="gTitle">Overall Progress</span>
   <div class="track"><div class="fill" id="gFill" style="width:0%"></div></div>
   <span class="gpct" id="gPct">0%</span>
   <span class="gcnt" id="gCnt">0 / 0</span>
@@ -154,7 +172,7 @@
 <div class="ctrls">
   <button class="btn" onclick="expandAll()">▼ All</button>
   <button class="btn" onclick="collapseAll()">▲ All</button>
-  <button class="btn danger" onclick="resetAll()">↺ Reset</button>
+  <button class="btn danger" onclick="resetCurrent()">↺ Reset</button>
 </div>
 
 <div class="co-list" id="root"></div>
@@ -164,7 +182,7 @@
 // ═══════════════════════════════════════════════════════
 //  STORAGE — localStorage, auto per-device (publish-safe)
 // ═══════════════════════════════════════════════════════
-const SK = 'maths_v2_progress'; // simplified storage key
+const SK = 'endsem_progress_v4';
 
 function saveState(key, val) {
   try {
@@ -179,205 +197,248 @@ function loadState(key) {
     return all[key] === true;
   } catch(e){ return false; }
 }
-function clearAllState() {
-  try { localStorage.removeItem(SK); } catch(e){}
-}
 
 // ═══════════════════════════════════════════════════════
-//  DATA
+//  DATA — MATHS
 // ═══════════════════════════════════════════════════════
-const DATA = [
+const MATHS = [
   { id:'co1', label:'CO 1', title:'Linear Programming',
     sections:[
-      { name:'LPP Formulation', models:[
-        'Product-mix / Profit maximization',
-        'Diet / Cost minimization',
-        'Blending / Ingredient mix',
-        'Agriculture / Land & labour allocation',
-        'Manufacturing / Machine capacity',
-      ]},
-      { name:'Graphical Method', models:[
-        'Bounded feasible region (Maximize)',
-        'Bounded feasible region (Minimize)',
-        'Unbounded solution',
-        'Infeasible / No feasible solution',
-        'Multiple optimal solutions',
-        'Equality constraint (line-segment feasible region)',
-        'Formulate + Solve (word problem → graph)',
-      ]},
-      { name:'Simplex Method', models:[
-        'Maximization (≤ constraints, standard)',
-        'Minimization (Big-M method)',
-        'Minimization (Two-phase method)',
-        'Degenerate solution handling',
-        'Multiple optimal solutions identification',
-      ]},
-      { name:'Duality', models:[
-        'Write Dual of a given Primal LPP',
-        'Solve Dual and verify strong duality',
-        'Complementary slackness conditions',
-      ]},
-      { name:'Transportation Problem', models:[
-        'IBFS — North West Corner Method',
-        'IBFS — Least Cost (Cell) Method',
-        'IBFS — Row Minima Method',
-        'IBFS — Column Minima Method',
-        'IBFS — Vogel\'s Approximation Method (VAM)',
-        'Optimization — MODI / UV Method',
-        'Unbalanced transportation (dummy row/col)',
-      ]},
-      { name:'Assignment Problem (Hungarian)', models:[
-        'Balanced assignment (square matrix)',
-        'Unbalanced assignment (dummy row/col)',
-        'Maximization assignment (convert to min)',
-      ]},
+      { name:'LPP Formulation', models:['Product-mix / Profit maximization','Diet / Cost minimization','Blending / Ingredient mix','Agriculture / Land & labour allocation','Manufacturing / Machine capacity']},
+      { name:'Graphical Method', models:['Bounded feasible region (Maximize)','Bounded feasible region (Minimize)','Unbounded solution','Infeasible / No feasible solution','Multiple optimal solutions','Equality constraint (line-segment feasible region)','Formulate + Solve (word problem → graph)']},
+      { name:'Simplex Method', models:['Maximization (≤ constraints, standard)','Minimization (Big-M method)','Minimization (Two-phase method)','Degenerate solution handling','Multiple optimal solutions identification']},
+      { name:'Duality', models:['Write Dual of a given Primal LPP','Solve Dual and verify strong duality','Complementary slackness conditions']},
+      { name:'Transportation Problem', models:['IBFS — North West Corner Method','IBFS — Least Cost (Cell) Method','IBFS — Row Minima Method','IBFS — Column Minima Method',"IBFS — Vogel's Approximation Method (VAM)",'Optimization — MODI / UV Method','Unbalanced transportation (dummy row/col)']},
+      { name:'Assignment Problem (Hungarian)', models:['Balanced assignment (square matrix)','Unbalanced assignment (dummy row/col)','Maximization assignment (convert to min)']},
     ]
   },
   { id:'co2', label:'CO 2', title:'Integer Programming',
     sections:[
-      { name:'ILP Formulation', models:[
-        'Pure Integer ILP',
-        'Mixed Integer ILP',
-        '0-1 Binary ILP',
-      ]},
-      { name:'Branch & Bound Method', models:[
-        'Minimization (2 variables)',
-        'Maximization (2 variables)',
-        'Multi-level branching (3+ sub-problems)',
-      ]},
-      { name:'Gomory\'s Cutting Plane Method', models:[
-        'One Gomory cut required',
-        'Two Gomory cuts required',
-      ]},
-      { name:'Gradient Descent', models:[
-        'Single variable f(x)',
-        'Two variables f(x, y)',
-      ]},
-      { name:'Conjugate Gradient Method', models:[
-        'Single variable f(x)',
-        'Two variables f(x, y)',
-      ]},
-      { name:'Newton\'s Method', models:[
-        'Single variable f(x)',
-        'Two variables f(x, y) — Hessian matrix',
-      ]},
+      { name:'ILP Formulation', models:['Pure Integer ILP','Mixed Integer ILP','0-1 Binary ILP']},
+      { name:'Branch & Bound Method', models:['Minimization (2 variables)','Maximization (2 variables)','Multi-level branching (3+ sub-problems)']},
+      { name:'Gomory\'s Cutting Plane Method', models:['One Gomory cut required','Two Gomory cuts required']},
+      { name:'Gradient Descent', models:['Single variable f(x)','Two variables f(x, y)']},
+      { name:'Conjugate Gradient Method', models:['Single variable f(x)','Two variables f(x, y)']},
+      { name:'Newton\'s Method', models:['Single variable f(x)','Two variables f(x, y) — Hessian matrix']},
     ]
   },
   { id:'co3', label:'CO 3', title:'Non-Linear Programming (NLP)',
     sections:[
-      { name:'KKT (Karush-Kuhn-Tucker) Conditions', models:[
-        '1 inequality constraint (≤)',
-        '2 inequality constraints (≤)',
-        '1 equality constraint (=)',
-        'Mixed — equality + inequality constraint',
-        'Maximization type',
-        'Verify if a point satisfies KKT',
-      ]},
-      { name:'Wolfe\'s Modified Simplex Method', models:[
-        '2 variables, 1 constraint',
-        '2 variables, 2 constraints',
-      ]},
-      { name:'Beale\'s Method', models:[
-        '2 variables, 1 constraint',
-        '2 variables, 2 constraints',
-      ]},
-      { name:'Geometric Programming', models:[
-        'Degree of difficulty = 0 (unconstrained)',
-        'Degree of difficulty = 0 (with constraints)',
-        'Degree of difficulty ≥ 1',
-        'Problems with positive & negative coefficients',
-      ]},
+      { name:'KKT (Karush-Kuhn-Tucker) Conditions', models:['1 inequality constraint (≤)','2 inequality constraints (≤)','1 equality constraint (=)','Mixed — equality + inequality constraint','Maximization type','Verify if a point satisfies KKT']},
+      { name:'Wolfe\'s Modified Simplex Method', models:['2 variables, 1 constraint','2 variables, 2 constraints']},
+      { name:'Beale\'s Method', models:['2 variables, 1 constraint','2 variables, 2 constraints']},
+      { name:'Geometric Programming', models:['Degree of difficulty = 0 (unconstrained)','Degree of difficulty = 0 (with constraints)','Degree of difficulty ≥ 1','Problems with positive & negative coefficients']},
     ]
   },
   { id:'co4', label:'CO 4', title:'Optimization-Based Search Algorithms',
     sections:[
-      { name:'Genetic Algorithm (GA)', models:[
-        'Maximize f(x) = x²',
-        'Minimize f(x) = (x−3)² (inverted fitness)',
-        'Custom objective function',
-      ]},
-      { name:'Simulated Annealing (SA)', models:[
-        'Minimize f(x) — single variable',
-        'Minimize f(x,y) — two variables',
-        'Travelling Salesman Problem (TSP)',
-        'Job scheduling / sequencing',
-      ]},
-      { name:'Tabu Search', models:[
-        'Travelling Salesman Problem (TSP)',
-        'Binary string / combinatorial problem',
-      ]},
-      { name:'Ant Colony Optimization (ACO)', models:[
-        'Shortest path / TSP',
-      ]},
-      { name:'Particle Swarm Optimization (PSO)', models:[
-        'Single variable — velocity + position update',
-        'Two variables — velocity + position update',
-      ]},
+      { name:'Genetic Algorithm (GA)', models:['Maximize f(x) = x²','Minimize f(x) = (x−3)² (inverted fitness)','Custom objective function']},
+      { name:'Simulated Annealing (SA)', models:['Minimize f(x) — single variable','Minimize f(x,y) — two variables','Travelling Salesman Problem (TSP)','Job scheduling / sequencing']},
+      { name:'Tabu Search', models:['Travelling Salesman Problem (TSP)','Binary string / combinatorial problem']},
+      { name:'Ant Colony Optimization (ACO)', models:['Shortest path / TSP']},
+      { name:'Particle Swarm Optimization (PSO)', models:['Single variable — velocity + position update','Two variables — velocity + position update']},
     ]
   },
 ];
 
 // ═══════════════════════════════════════════════════════
-//  BUILD DOM
+//  DATA — MACHINE LEARNING
 // ═══════════════════════════════════════════════════════
-const root = document.getElementById('root');
+const ML = [
+  { id:'co1', label:'CO 1', title:'Intro & Pre-processing',
+    sections:[
+      { name:'Introduction to ML', models:['Types: Supervised Learning','Types: Unsupervised Learning','Types: Reinforcement Learning']},
+      { name:'Data Pre-processing', models:['Handling missing values','Handling outliers','Categorical data encoding','Data splitting (training and test sets)']},
+      { name:'Feature Selection & Engineering', models:['Data scaling and normalization','Principal Component Analysis (PCA)','Linear Discriminant Analysis (LDA)','Feature selection and filtering','Feature transformation','Visualization of high-dimensional datasets']},
+    ]
+  },
+  { id:'co2', label:'CO 2', title:'Supervised Learning & Metrics',
+    sections:[
+      { name:'Linear Models', models:['Linear Regression','Logistic Regression']},
+      { name:'Decision Trees', models:['Introduction to Decision Trees','Splitting criteria (entropy, Gini, info gain)','Binary vs. multi-class decision trees','Algorithms: ID3, C4.5, CART']},
+      { name:'Probability Models', models:['Naive Bayes: Basic Building Blocks','Naive Bayes Classifier','Bayesian Belief Networks']},
+      { name:'Instance-based Learning', models:['K-Nearest Neighbors (K-NN) Classifier']},
+      { name:'Performance Metrics', models:['Classification: Accuracy, Precision, Recall, F1, ROC-AUC','Regression: R² Score, MSE, MAE','Bias-Variance Trade-off']},
+    ]
+  },
+  { id:'co3', label:'CO 3', title:'Ensembles, SVM & Clustering',
+    sections:[
+      { name:'Ensemble Learning', models:['Bagging and Boosting basics','Random Forest','AdaBoost','Gradient Boosting','XGBoost','Stacking']},
+      { name:'Support Vector Machines', models:['Linear SVM','Kernel-based classification','Kernel types: Polynomial, RBF']},
+      { name:'Unsupervised Learning – Clustering', models:['Clustering Fundamentals (Basics)','K-Means clustering','Hierarchical clustering','DBSCAN','Challenges in clustering and evaluation methods']},
+    ]
+  },
+  { id:'co4', label:'CO 4', title:'Association Rules & Neural Nets',
+    sections:[
+      { name:'Association Rule Learning', models:['Frequent itemsets and association rules','Apriori Algorithm','FP-Growth Algorithm']},
+      { name:'Artificial Neural Networks', models:['Biological neuron vs. artificial neuron','ANN architecture','Types of activation functions','Learning process in ANN','Overview of representation learning']},
+    ]
+  },
+];
 
-DATA.forEach(co => {
-  const card = document.createElement('div');
-  card.className = `co-card ${co.id}`;
-  card.id = `card-${co.id}`;
+// ═══════════════════════════════════════════════════════
+//  DATA — CLOUD INFRASTRUCTURE SERVICES
+// ═══════════════════════════════════════════════════════
+const CIS = [
+  { id:'co1', label:'CO 1', title:'Cloud Basics & Architecture',
+    sections:[
+      { name:'Introduction to Cloud Technologies', models:['Introduction to Cloud Computing','History of cloud computing','Cloud Deployment models']},
+      { name:'Cloud Service Options', models:['IaaS, PaaS, and SaaS','Recovery as a Service (RaaS)','Identity as a Service (IDaaS)','Storage as a Service (STaaS)','Monitoring as a Service (MaaS)','Communication as a Service (CaaS)','Comparison of service providers']},
+      { name:'Cloud Architectures', models:['NIST cloud reference Architecture','ITU-T Architecture','Traditional vs Cloud Applications Assumption']},
+    ]
+  },
+  { id:'co2', label:'CO 2', title:'Virtualization & Containers',
+    sections:[
+      { name:'Virtualization Fundamentals', models:['Hardware vs OS level virtualization techniques','Taxonomy of virtualization techniques','Characteristics of virtualized environments','Pros and cons of virtualization']},
+      { name:'Virtualization Technologies', models:['Xen: para-virtualization','VMware: full virtualization','Microsoft Hyper-V']},
+      { name:'Containerization', models:['VMs vs Containers','Docker Architecture','Container Images','Container Registries']},
+      { name:'Kubernetes (K8s)', models:['Pods','Deployments','Services (Conceptual)']},
+    ]
+  },
+  { id:'co3', label:'CO 3', title:'Virtual Private Clouds (VPC)',
+    sections:[
+      { name:'VPC Networking', models:['Subnets','Security Groups','Routing tables','Internet Gateways']},
+      { name:'Load Balancing & Scaling', models:['Load Balancers in VPC','Types of Load Balancing','Risk Factors in Load Balancing','Risk Factors in Auto Scaling']},
+    ]
+  },
+  { id:'co4', label:'CO 4', title:'Security & IAM',
+    sections:[
+      { name:'Cloud Security', models:['Cloud Security Introduction','Infrastructure Security','Network-level security','Host-level security','Application-level security']},
+      { name:'Identity & Access Management', models:['Access Control','Trust, Reputation, Risk','Authentication in cloud computing','Client and API-based Access in Cloud']},
+      { name:'Pricing & Cost', models:['Cloud Pricing Models','Cost Optimization Policies']},
+    ]
+  },
+];
 
-  const head = document.createElement('div');
-  head.className = 'co-head';
-  head.innerHTML = `
-    <span class="badge">${co.label}</span>
-    <span class="co-title">${co.title}</span>
-    <div class="mini-wrap"><div class="mini-fill" id="mf-${co.id}" style="width:0%"></div></div>
-    <span class="co-pct" id="mp-${co.id}">0%</span>
-    <span class="chev">▼</span>`;
+// ═══════════════════════════════════════════════════════
+//  DATA — EDGE AI COMPUTING
+// ═══════════════════════════════════════════════════════
+const EDGE = [
+  { id:'co1', label:'CO 1', title:'Edge Fundamentals',
+    sections:[
+      { name:'Introduction to Edge Computing', models:['Evolution: Cloud to Fog to Edge','Motivation: Latency, bandwidth, privacy, real-time analytics','Edge–Fog–Cloud continuum & layered architecture','Characteristics and constraints of edge environments']},
+      { name:'Edge Devices & Hardware', models:['Types of Edge Devices: SBCs (RaspPi, Jetson Nano)','IoT nodes & embedded controllers','Hardware requirements for AI at the edge']},
+      { name:'Networking & Services', models:['Networking layers & connectivity (Wi-Fi 6, BLE, Zigbee, LPWAN, 5G)','Edge services and microservice architecture']},
+    ]
+  },
+  { id:'co2', label:'CO 2', title:'AI for Edge & Optimization',
+    sections:[
+      { name:'Lightweight Models', models:['Need for AI at edge: local inference, low-latency','Overview of DL models for constrained devices']},
+      { name:'Model Optimization Techniques', models:['Quantization (INT8, FP16)','Pruning and weight sharing','Knowledge distillation','Neural Architecture Search (NAS)']},
+      { name:'Deployment & Benchmarking', models:['Deployment formats: TFLite, ONNX, PyTorch Mobile','Edge AI benchmark metrics (latency, throughput, power efficiency)']},
+      { name:'Case Studies', models:['Vision-based Edge AI','Audio intelligence','Anomaly detection']},
+    ]
+  },
+  { id:'co3', label:'CO 3', title:'Platforms, Protocols & Containers',
+    sections:[
+      { name:'Edge Operating Systems', models:['Ubuntu Core','Yocto','Edge Linux distributions']},
+      { name:'Communication Protocols', models:['MQTT','CoAP','AMQP','DDS']},
+      { name:'Containerization & Orchestration', models:['Containerization at the edge: Docker, Podman','Orchestration frameworks: Kubernetes at Edge']},
+    ]
+  },
+  { id:'co4', label:'CO 4', title:'Performance & Reliability',
+    sections:[
+      { name:'Performance Engineering', models:['Latency analysis and performance bottlenecks','Bandwidth estimation and offloading strategies','Energy efficiency and thermal challenges','Benchmarking tools (MLPerf Tiny, EdgeBench)']},
+      { name:'Edge-Cloud Collaboration', models:['Resource aware scheduling and load balancing','Hybrid inference','Partitioned AI models']},
+      { name:'Systems Reliability', models:['Fault tolerance, reliability, and QoS considerations','Case studies: Time-critical apps (healthcare monitoring, surveillance)']},
+    ]
+  },
+];
 
-  const body = document.createElement('div');
-  body.className = 'co-body';
-  body.id = `body-${co.id}`;
+// ═══════════════════════════════════════════════════════
+//  STATE & RENDER LOGIC
+// ═══════════════════════════════════════════════════════
+let currentSubject = 'maths';
 
-  co.sections.forEach(sec => {
-    const sec_el = document.createElement('div');
-    sec_el.className = 'prob-section';
+function switchSubject(sub) {
+  currentSubject = sub;
+  
+  // Update Tabs
+  document.getElementById('tab-maths').classList.toggle('active', sub === 'maths');
+  document.getElementById('tab-ml').classList.toggle('active', sub === 'ml');
+  document.getElementById('tab-cis').classList.toggle('active', sub === 'cis');
+  document.getElementById('tab-edge').classList.toggle('active', sub === 'edge');
+  
+  // Update Global Title
+  let title = 'Maths Progress';
+  if (sub === 'ml') title = 'Machine Learning Progress';
+  if (sub === 'cis') title = 'Cloud Infra Progress';
+  if (sub === 'edge') title = 'Edge AI Progress';
+  document.getElementById('gTitle').textContent = title;
 
-    const title = document.createElement('div');
-    title.className = 'prob-title';
-    title.textContent = sec.name;
-    sec_el.appendChild(title);
+  buildUI();
+}
 
-    sec.models.forEach((model, mi) => {
-      const key = `${co.id}__${sec.name}__${mi}`;
-      const checked = loadState(key);
+function getActiveDataset() {
+  if (currentSubject === 'maths') return MATHS;
+  if (currentSubject === 'ml') return ML;
+  if (currentSubject === 'cis') return CIS;
+  return EDGE;
+}
 
-      const row = document.createElement('div');
-      row.className = `model${checked ? ' done' : ''}`;
-      row.dataset.key = key;
-      row.innerHTML = `<div class="box"></div><span class="mlabel">${model}</span>`;
-      row.addEventListener('click', () => toggleModel(row, key));
+function buildUI() {
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+  
+  const dataset = getActiveDataset();
 
-      sec_el.appendChild(row);
+  dataset.forEach(co => {
+    const card = document.createElement('div');
+    card.className = `co-card ${co.id}`;
+    card.id = `card-${co.id}`;
+
+    const head = document.createElement('div');
+    head.className = 'co-head';
+    head.innerHTML = `
+      <span class="badge">${co.label}</span>
+      <span class="co-title">${co.title}</span>
+      <div class="mini-wrap"><div class="mini-fill" id="mf-${co.id}" style="width:0%"></div></div>
+      <span class="co-pct" id="mp-${co.id}">0%</span>
+      <span class="chev">▼</span>`;
+
+    const body = document.createElement('div');
+    body.className = 'co-body';
+    body.id = `body-${co.id}`;
+
+    co.sections.forEach(sec => {
+      const sec_el = document.createElement('div');
+      sec_el.className = 'prob-section';
+
+      const title = document.createElement('div');
+      title.className = 'prob-title';
+      title.textContent = sec.name;
+      sec_el.appendChild(title);
+
+      sec.models.forEach((model, mi) => {
+        // Unique key per subject + CO + section + index
+        const key = `${currentSubject}__${co.id}__${sec.name}__${mi}`;
+        const checked = loadState(key);
+
+        const row = document.createElement('div');
+        row.className = `model${checked ? ' done' : ''}`;
+        row.dataset.key = key;
+        row.innerHTML = `<div class="box"></div><span class="mlabel">${model}</span>`;
+        row.addEventListener('click', () => toggleModel(row, key));
+
+        sec_el.appendChild(row);
+      });
+
+      body.appendChild(sec_el);
     });
 
-    body.appendChild(sec_el);
+    head.addEventListener('click', () => {
+      const collapsed = card.classList.toggle('collapsed');
+      body.classList.toggle('hidden', collapsed);
+    });
+
+    card.appendChild(head);
+    card.appendChild(body);
+    root.appendChild(card);
   });
 
-  head.addEventListener('click', () => {
-    const collapsed = card.classList.toggle('collapsed');
-    body.classList.toggle('hidden', collapsed);
-  });
+  updateProgress();
+}
 
-  card.appendChild(head);
-  card.appendChild(body);
-  root.appendChild(card);
-});
-
-// ═══════════════════════════════════════════════════════
-//  LOGIC
-// ═══════════════════════════════════════════════════════
 function toggleModel(row, key) {
   const now = !row.classList.contains('done');
   row.classList.toggle('done', now);
@@ -387,16 +448,21 @@ function toggleModel(row, key) {
 }
 
 function updateProgress() {
+  const dataset = getActiveDataset();
   const allRows = document.querySelectorAll('.model');
   let total = allRows.length, done = 0;
 
-  DATA.forEach(co => {
+  dataset.forEach(co => {
     const rows = document.querySelectorAll(`#card-${co.id} .model`);
     let cd = 0;
     rows.forEach(r => { if (r.classList.contains('done')) cd++; });
     const pct = rows.length ? Math.round(cd / rows.length * 100) : 0;
-    document.getElementById(`mf-${co.id}`).style.width = pct + '%';
-    document.getElementById(`mp-${co.id}`).textContent = pct + '%';
+    
+    const fillEl = document.getElementById(`mf-${co.id}`);
+    const pctEl = document.getElementById(`mp-${co.id}`);
+    if(fillEl) fillEl.style.width = pct + '%';
+    if(pctEl) pctEl.textContent = pct + '%';
+    
     done += cd;
   });
 
@@ -418,10 +484,12 @@ function collapseAll() {
     c.querySelector('.co-body').classList.add('hidden');
   });
 }
-function resetAll() {
-  if (!confirm('Reset all progress? This cannot be undone.')) return;
-  clearAllState();
-  document.querySelectorAll('.model').forEach(r => r.classList.remove('done'));
+function resetCurrent() {
+  if (!confirm(`Reset all ${currentSubject.toUpperCase()} progress? This cannot be undone.`)) return;
+  document.querySelectorAll('.model').forEach(r => {
+    r.classList.remove('done');
+    saveState(r.dataset.key, false);
+  });
   updateProgress();
   toast('Reset complete');
 }
@@ -435,8 +503,9 @@ function toast(msg) {
   _tt = setTimeout(() => el.classList.remove('show'), 1600);
 }
 
-// Init
-updateProgress();
+// Initial Build
+buildUI();
+switchSubject('maths');
 </script>
 </body>
 </html>
